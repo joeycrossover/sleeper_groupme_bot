@@ -1,0 +1,13 @@
+name: GBURG_AGU_FFL
+title: GBURG_AGU_FFL
+username: joeycrossover
+account: joeycrossover
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12697198
+bundleId: 11096015
+url: https://joeycrossover.shinyapps.io/GBURG_AGU_FFL/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: update_power_rankings_and_incentives.R
