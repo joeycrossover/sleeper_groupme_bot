@@ -46,12 +46,5 @@ incentive watch.
   archive `history.csv` (week 1 self-seeds `Prev` from standings).
 
 ## Known quirks inherited from the RDS
-
-- Week 7 was written twice with different `Rk`; the duplicate was dropped,
-  keeping the first copy (which is what week 8's `Prev` had matched).
-- Week 2's stored `Rk` isn't reproducible from its own components — weights
-  appear to have been tuned after week 2. Historical rows are frozen as-is.
-- johnhallock's week 3 `wk_pf` is 1.00 higher than every cumulative total
-  built on it. Frozen in the seed; live runs recompute both from one pull.
 - `pfp` uses the season-to-date `ppts` snapshot from the rosters endpoint, so
   it drifts if you ever recompute an old week. Append-only avoids this.
