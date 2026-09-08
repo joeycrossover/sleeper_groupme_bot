@@ -1,0 +1,33 @@
+name: Bot Says
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Message text (use \\n for line breaks)"
+        required: true
+        type: string
+      image_url:
+        description: "Optional i.groupme.com image URL"
+        required: false
+        type: string
+
+jobs:
+  say:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install requests
+
+      - name: Send message
+        env:
+          GROUPME_BOT_ID: ${{ secrets.GROUPME_BOT_ID }}
+          MESSAGE: ${{ inputs.message }}
+          IMAGE_URL: ${{ inputs.image_url }}
+        run: python say.py
