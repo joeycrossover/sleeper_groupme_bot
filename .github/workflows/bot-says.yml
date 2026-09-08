@@ -11,6 +11,11 @@ on:
         description: "Optional i.groupme.com image URL"
         required: false
         type: string
+      dry_run:
+        description: "Preview in the log instead of posting to GroupMe"
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   say:
@@ -30,4 +35,5 @@ jobs:
           GROUPME_BOT_ID: ${{ secrets.GROUPME_BOT_ID }}
           MESSAGE: ${{ inputs.message }}
           IMAGE_URL: ${{ inputs.image_url }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
         run: python say.py
