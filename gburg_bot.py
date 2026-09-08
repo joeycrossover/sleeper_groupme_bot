@@ -249,17 +249,32 @@ def incentive_message(week, users, rosters, matchups):
 
 
 def chunk(text, limit=GROUPME_LIMIT):
-    """Split on newlines if a message ever outgrows GroupMe's 1000-char cap."""
+    """Split to fit GroupMe's cap, preferring line breaks but hard-wrapping
+    any single line that is too long to break."""
     if len(text) <= limit:
         return [text]
-    parts, cur = [], ""
+    budget = limit - 10  # headroom for the "(n/m)\n" prefix
+
+    pieces = []
     for line in text.split("\n"):
-        if len(cur) + len(line) + 1 > limit - 8:
-            parts.append(cur.rstrip())
-            cur = ""
-        cur += line + "\n"
+        while len(line) > budget:
+            pieces.append(line[:budget])
+            line = line[budget:]
+        pieces.append(line)
+
+    parts, cur = [], ""
+    for piece in pieces:
+        candidate = piece if not cur else cur + "\n" + piece
+        if len(candidate) > budget:
+            if cur:
+                parts.append(cur)
+            cur = piece
+        else:
+            cur = candidate
     if cur.strip():
-        parts.append(cur.rstrip())
+        parts.append(cur)
+
+    parts = [p for p in parts if p.strip()]
     return [f"({i}/{len(parts)})\n{p}" for i, p in enumerate(parts, 1)]
 
 
