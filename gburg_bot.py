@@ -22,7 +22,7 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import requests
 
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "1256817986006683648")
+LEAGUE_ID = os.environ.get("LEAGUE_ID", "13882360304060620")
 BOT_ID = os.environ.get("GROUPME_BOT_ID", "")
 DRY_RUN = os.environ.get("DRY_RUN") == "1"
 FORCE = os.environ.get("FORCE") == "1"
