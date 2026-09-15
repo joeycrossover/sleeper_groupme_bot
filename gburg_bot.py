@@ -336,8 +336,8 @@ def post_graphic(users, rosters, matchups, rows, incentives, week):
 
 def main():
     now_et = datetime.now(ZoneInfo("America/New_York"))
-    if not FORCE and now_et.hour != 9:
-        print(f"Not 9am ET (currently {now_et:%H:%M %Z}) — skipping.")
+    if not FORCE and now_et.hour < 9:
+        print(f"Before 9am ET (currently {now_et:%H:%M %Z}) — skipping.")
         return 0
 
     if not LEAGUE_ID:
