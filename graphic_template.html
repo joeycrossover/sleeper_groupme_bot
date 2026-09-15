@@ -1,0 +1,251 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>GBurg FFL — Week 1 recap graphic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:      #0C2033;   /* base */
+    --panel:    #12314C;   /* raised blocks */
+    --line:     #234A6B;   /* hairlines */
+    --chalk:    #F2EFE6;   /* primary text */
+    --muted:    #8FA9BF;   /* secondary text */
+    --gold:     #E9B23C;   /* money */
+    --up:       #46B37A;   /* gained ground */
+    --down:     #E0614A;   /* lost ground */
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    background:transparent;
+    font-family:"Barlow Semi Condensed",system-ui,sans-serif;
+    margin:0; padding:0;
+  }
+
+
+  /* ---- the exported frame: 1200 x 1500, 4:5 — X renders this uncropped ---- */
+  .frame{
+    width:1200px; height:1500px;
+    background:var(--ink); color:var(--chalk);
+    display:grid; grid-template-rows:118px 1fr 1fr 54px;
+    overflow:hidden;
+  }
+
+  /* header */
+  .bug{
+    display:flex; align-items:center; gap:20px;
+    padding:0 34px; background:var(--panel);
+    border-bottom:3px solid var(--gold);
+  }
+  .bug img{width:62px; height:62px; border-radius:6px}
+  .bug h1{
+    font-family:"Archivo Black",system-ui,sans-serif;
+    font-size:33px; letter-spacing:-.6px; line-height:1;
+  }
+  .bug .sub{color:var(--muted); font-size:17px; font-weight:500; margin-top:5px}
+  .week{
+    margin-left:auto; text-align:right; line-height:.86;
+  }
+  .week b{
+    display:block; font-family:"Archivo Black",system-ui,sans-serif;
+    font-size:64px; color:var(--gold);
+  }
+  .week span{font-size:17px; color:var(--muted); font-weight:600; letter-spacing:2px}
+
+  /* grid of four blocks */
+  .row{display:grid; grid-template-columns:1fr 1fr}
+  .block{padding:22px 28px 18px; border-top:1px solid var(--line)}
+  .block + .block{border-left:1px solid var(--line)}
+
+  .block h2{
+    font-family:"Archivo Black",system-ui,sans-serif;
+    font-size:19px; letter-spacing:.4px; margin-bottom:3px;
+  }
+  .block .note{color:var(--muted); font-size:15px; margin-bottom:14px}
+
+  /* matchups */
+  .game{border-bottom:1px solid var(--line); padding:9px 0}
+  .game:last-child{border-bottom:0}
+  .side{display:flex; align-items:baseline; gap:10px; padding:3px 0}
+  .side .nm{
+    flex:1; font-size:21px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .side .pts{font-size:22px; font-weight:700; font-variant-numeric:tabular-nums}
+  .side.lost .nm,.side.lost .pts{color:var(--muted); font-weight:500}
+  .side .tick{width:10px; color:var(--gold); font-size:17px}
+
+  /* ranked tables */
+  table{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums}
+  th{
+    text-align:right; font-size:14px; font-weight:600; color:var(--muted);
+    letter-spacing:.6px; padding-bottom:7px; border-bottom:1px solid var(--line);
+  }
+  th:nth-child(-n+2){text-align:left}
+  td{padding:7px 0; font-size:20px; text-align:right; border-bottom:1px solid rgba(35,74,107,.45)}
+  tr:last-child td{border-bottom:0}
+  td.pos{
+    text-align:left; width:38px; color:var(--muted);
+    font-family:"Archivo Black",system-ui,sans-serif; font-size:17px;
+  }
+  td.team{
+    text-align:left; font-weight:600; max-width:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  td.chg{width:52px; font-weight:700; font-size:18px; color:var(--muted)}
+  .chg.up{color:var(--up)} .chg.down{color:var(--down)}
+  tr.lead td.pos{color:var(--gold)}
+
+  /* money */
+  .purse{display:flex; flex-direction:column; gap:12px; margin-bottom:22px}
+  .prize{
+    display:flex; align-items:center; gap:18px;
+    background:var(--panel); border-left:4px solid var(--gold);
+    padding:13px 18px;
+  }
+  .prize .amt{
+    font-family:"Archivo Black",system-ui,sans-serif;
+    font-size:31px; color:var(--gold); min-width:74px;
+  }
+  .prize .who{font-size:21px; font-weight:600; line-height:1.15}
+  .prize .what{font-size:15px; color:var(--muted)}
+  .prize .val{margin-left:auto; font-size:24px; font-weight:700; font-variant-numeric:tabular-nums}
+
+  .glance{border-top:1px solid var(--line); padding-top:14px}
+  .glance div{
+    display:flex; justify-content:space-between; gap:14px;
+    font-size:18px; padding:6px 0;
+  }
+  .glance span{color:var(--muted)}
+  .glance b{font-weight:600; text-align:right}
+
+  /* footer */
+  .strip{
+    display:flex; align-items:center; gap:18px;
+    padding:0 34px; background:var(--panel);
+    border-top:1px solid var(--line);
+    color:var(--muted); font-size:16px; font-weight:500;
+  }
+  .strip .dot{color:var(--gold)}
+  .strip .tag{margin-left:auto; color:var(--chalk); font-weight:600}
+</style>
+
+<div class="frame">
+  <header class="bug">
+    <img src="https://sleepercdn.com/avatars/thumbs/4f108f189297f058c0d12350f82f8571" alt="">
+    <div>
+      <h1>G-Burg All Grown Up FFL</h1>
+      <div class="sub">2026 season &middot; 12 teams &middot; powered by Sleeper</div>
+    </div>
+    <div class="week"><b id="wkNum">1</b><span>WEEK</span></div>
+  </header>
+
+  <div class="row">
+    <section class="block">
+      <h2>Final scores</h2>
+      <p class="note" id="gamesNote"></p>
+      <div id="games"></div>
+    </section>
+
+    <section class="block">
+      <h2>Power rankings</h2>
+      <p class="note">Weighted across nine components, points for carries the most.</p>
+      <table>
+        <thead><tr><th></th><th>Team</th><th>Rec</th><th>PF</th><th>Chg</th></tr></thead>
+        <tbody id="ranks"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="block">
+      <h2>Standings</h2>
+      <p class="note">Sorted by record, then points for.</p>
+      <table>
+        <thead><tr><th></th><th>Team</th><th>Rec</th><th>PF</th><th>PA</th><th>Strk</th></tr></thead>
+        <tbody id="standings"></tbody>
+      </table>
+    </section>
+
+    <section class="block">
+      <h2>Incentive watch</h2>
+      <p class="note" id="purseNote"></p>
+      <div class="purse" id="purse"></div>
+      <div class="glance" id="glance"></div>
+    </section>
+  </div>
+
+  <footer class="strip">
+    <span>Rankings post Tuesdays 9am ET</span>
+    <span class="dot">&bull;</span>
+    <span>Full season history on Sleeper</span>
+    <span class="tag">@gburgfantasybot</span>
+  </footer>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Everything the graphic needs, in the shape gburg_bot.py can emit.
+   Values below are real Week 1 output EXCEPT the matchup pairings and
+   the PA column, which are invented to fill the layout.
+------------------------------------------------------------------ */
+const DATA = __PAYLOAD__;
+
+const fmt = n => n.toFixed(1);
+
+document.getElementById("wkNum").textContent = DATA.week;
+document.getElementById("gamesNote").textContent = DATA.notes.games;
+document.getElementById("purseNote").textContent = DATA.notes.purse;
+document.querySelector(".bug .sub").textContent = DATA.subtitle;
+
+document.getElementById("games").innerHTML = DATA.games.map(([a, b]) => `
+  <div class="game">
+    <div class="side"><span class="tick">&#9656;</span><span class="nm">${a.team}</span><span class="pts">${fmt(a.pts)}</span></div>
+    <div class="side lost"><span class="tick"></span><span class="nm">${b.team}</span><span class="pts">${fmt(b.pts)}</span></div>
+  </div>`).join("");
+
+const pa = DATA.pa;
+
+function arrow(c){
+  if (c > 0) return `<td class="chg up">&#9650;${c}</td>`;
+  if (c < 0) return `<td class="chg down">&#9660;${-c}</td>`;
+  return `<td class="chg">&ndash;</td>`;
+}
+
+function paint(){
+  document.getElementById("ranks").innerHTML = DATA.ranks.map(r => `
+    <tr class="${r.rk === 1 ? "lead" : ""}">
+      <td class="pos">${r.rk}</td>
+      <td class="team">${r.team}</td>
+      <td>${r.w}-${r.l}</td>
+      <td>${fmt(r.pf)}</td>
+      ${arrow(r.chg)}
+    </tr>`).join("");
+}
+paint();
+
+document.getElementById("standings").innerHTML = [...DATA.ranks]
+  .sort((x, y) => y.w - x.w || y.pf - x.pf)
+  .map((r, i) => `
+    <tr class="${i === 0 ? "lead" : ""}">
+      <td class="pos">${i + 1}</td>
+      <td class="team">${r.team}</td>
+      <td>${r.w}-${r.l}</td>
+      <td>${fmt(r.pf)}</td>
+      <td>${fmt(pa[r.team])}</td>
+      <td>${r.strk}</td>
+    </tr>`).join("");
+
+document.getElementById("purse").innerHTML = DATA.purse.map(p => `
+  <div class="prize">
+    <span class="amt">${p.amt}</span>
+    <span><span class="who">${p.who}</span><br><span class="what">${p.what}</span></span>
+    <span class="val">${p.val}</span>
+  </div>`).join("");
+
+document.getElementById("glance").innerHTML = DATA.glance
+  .map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+</script>
