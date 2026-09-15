@@ -34,15 +34,40 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Cache chromium
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install chromium
+        run: playwright install --with-deps chromium
+
       - name: Post rankings
         env:
           GROUPME_BOT_ID: ${{ secrets.GROUPME_BOT_ID }}
           LEAGUE_ID: ${{ vars.LEAGUE_ID }}
+          SEASON: ${{ vars.SEASON }}
           WEEK: ${{ inputs.week }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
           # manual runs skip the clock guard and the already-posted guard
           FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+          POST_X: ${{ inputs.skip_x && '' || '1' }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
         run: python gburg_bot.py
+
+      - name: Upload graphic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recap-week-${{ inputs.week || 'auto' }}
+          path: out/*.png
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Commit updated history
         run: |
