@@ -48,6 +48,6 @@ jobs:
         run: |
           git config user.name "gburgfantasybot"
           git config user.email "actions@users.noreply.github.com"
-          git add history.csv
+          git add -A
           git diff --staged --quiet || git commit -m "Power rankings history update"
           git push
