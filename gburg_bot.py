@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """
-GBurg All Grown Up FFL -> GroupMe (@gburgfantasybot)
+GBurg All Grown Up FFL -> GroupMe (@gburgfantasybot) + X
 
-Posts the weekly power rankings + incentive watch after each completed week.
-Port of the Shiny app's ranking logic; history is append-only in history.csv.
+Posts the weekly power rankings + incentive watch to the league chat after each
+completed week, and optionally a recap graphic to X.
 
 Env vars:
   GROUPME_BOT_ID  (required unless DRY_RUN=1)
-  LEAGUE_ID       (default: the 2025 GBurg league)
+  LEAGUE_ID       (required; the current season's Sleeper league id)
+  SEASON          (optional; shown in the graphic subtitle)
   WEEK            (optional int; override auto-detected completed week)
   DRY_RUN         (1 = print messages, don't post, don't write history)
   FORCE           (1 = skip the 9am-ET guard and the already-posted guard)
+  POST_X          (1 = also render and post the recap graphic to X)
+  X_API_KEY / X_API_SECRET / X_ACCESS_TOKEN / X_ACCESS_SECRET  (required if POST_X=1)
+
+History is an upsert: the target week is dropped before the new rows are written,
+so a forced re-run replaces that week rather than duplicating it.
 """
 
 import json
@@ -22,10 +28,11 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import requests
 
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "13882360304060620")
+LEAGUE_ID = os.environ.get("LEAGUE_ID", "")
 BOT_ID = os.environ.get("GROUPME_BOT_ID", "")
 DRY_RUN = os.environ.get("DRY_RUN") == "1"
 FORCE = os.environ.get("FORCE") == "1"
+POST_X = os.environ.get("POST_X") == "1"
 
 REGULAR_SEASON_WEEKS = 14
 HISTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.csv")
@@ -225,7 +232,8 @@ def rankings_message(week, rows):
     return "\n".join(lines)
 
 
-def incentive_message(week, users, rosters, matchups):
+def incentive_rows(week, users, rosters, matchups):
+    """(amount, label, team, value) — the GroupMe text and the X graphic share these."""
     standings = rosters.merge(users, left_on="owner_id", right_on="user_id")
     standings = standings.sort_values(["wins", "fpts"], ascending=[False, False])
 
@@ -238,14 +246,21 @@ def incentive_message(week, users, rosters, matchups):
     hi = played.sort_values("points", ascending=False).iloc[0]
 
     champ_label = "Reg. Season Champ" if week >= REGULAR_SEASON_WEEKS else "Reg. Season Leader"
-    return "\n".join([
-        f"💰 INCENTIVE WATCH — Week {week}",
-        "",
-        f"Season PF Leader (${PAYOUT_SEASON_PF}): {pf_lead.team_name} — {pf_lead.fpts:.1f}",
-        f"Weekly High (${PAYOUT_WEEKLY_PF}): {hi.team_name} — {hi.points:.1f} (Wk {int(hi.week)})",
-        f"{champ_label} (${PAYOUT_RS_CHAMP}): {champ.team_name} — "
-        f"{int(champ.wins)}-{int(champ.losses)}",
-    ])
+    return [
+        (f"${PAYOUT_SEASON_PF}", "Season PF Leader",
+         pf_lead.team_name, f"{pf_lead.fpts:.1f}"),
+        (f"${PAYOUT_WEEKLY_PF}", "Weekly High",
+         hi.team_name, f"{hi.points:.1f} (Wk {int(hi.week)})"),
+        (f"${PAYOUT_RS_CHAMP}", champ_label,
+         champ.team_name, f"{int(champ.wins)}-{int(champ.losses)}"),
+    ]
+
+
+def incentive_message(week, rows):
+    lines = [f"💰 INCENTIVE WATCH — Week {week}", ""]
+    for amt, label, team, val in rows:
+        lines.append(f"{label} ({amt}): {team} — {val}")
+    return "\n".join(lines)
 
 
 def chunk(text, limit=GROUPME_LIMIT):
@@ -294,6 +309,29 @@ def post(text):
             raise RuntimeError(f"GroupMe returned {r.status_code}: {r.text}")
 
 
+# ---------- X ----------
+
+def post_graphic(users, rosters, matchups, rows, incentives, week):
+    """Render the recap graphic and post it. Never raises — X is best-effort."""
+    try:
+        import graphic
+        import x_client
+
+        payload = graphic.build_payload(
+            users, rosters, matchups, rows, incentives, week,
+            season=os.environ.get("SEASON"),
+        )
+        png = graphic.render_png(payload, f"out/week_{week:02d}.png")
+        x_client.post_image(
+            png,
+            x_client.caption(week, payload["ranks"][0]["team"]),
+            alt=graphic.alt_text(payload),
+            dry_run=DRY_RUN,
+        )
+    except Exception as exc:
+        print(f"X post failed: {exc}", file=sys.stderr)
+
+
 # ---------- main ----------
 
 def main():
@@ -301,6 +339,10 @@ def main():
     if not FORCE and now_et.hour != 9:
         print(f"Not 9am ET (currently {now_et:%H:%M %Z}) — skipping.")
         return 0
+
+    if not LEAGUE_ID:
+        print("LEAGUE_ID is not set.", file=sys.stderr)
+        return 1
 
     if not BOT_ID and not DRY_RUN:
         print("GROUPME_BOT_ID is not set.", file=sys.stderr)
@@ -327,17 +369,19 @@ def main():
         return 0
 
     rows = compute_week(users, rosters, matchups, week, history)
+    incentives = incentive_rows(week, users, rosters, matchups)
 
-    msg_rank = rankings_message(week, rows)
-    msg_inc = incentive_message(week, users, rosters, matchups)
-    post(msg_rank)
-    post(msg_inc)
+    post(rankings_message(week, rows))
+    post(incentive_message(week, incentives))
 
     if not DRY_RUN:
         history = history[history.week != week] if not history.empty else history
         out = pd.concat([history, rows], ignore_index=True).sort_values(["week", "Rk"])
         out.to_csv(HISTORY, index=False)
-        print(f"Posted week {week} and appended {len(rows)} rows to history.csv")
+        print(f"Posted week {week} and wrote {len(rows)} rows to history.csv")
+
+    if POST_X:
+        post_graphic(users, rosters, matchups, rows, incentives, week)
 
     return 0
 
