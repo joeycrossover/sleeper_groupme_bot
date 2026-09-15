@@ -17,6 +17,11 @@ on:
         required: false
         default: false
         type: boolean
+      skip_x:
+        description: "Skip the X post (GroupMe only)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
